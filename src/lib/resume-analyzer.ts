@@ -1,4 +1,5 @@
 import type { ResumeFeedback, ResumeSection, SkillGap } from "./types";
+import { detectJob, getSkillsForJob } from "./job-titles";
 
 const SKILL_KEYWORDS: Record<string, string[]> = {
   JavaScript: ["javascript", "js", "es6", "typescript", "node.js", "nodejs", "react", "vue", "angular"],
@@ -18,20 +19,42 @@ const SKILL_KEYWORDS: Record<string, string[]> = {
   Cybersecurity: ["security", "cybersecurity", "penetration", "soc", "siem"],
   Marketing: ["marketing", "seo", "sem", "content marketing", "social media"],
   Sales: ["sales", "crm", "salesforce", "business development"],
-  Finance: ["finance", "accounting", "financial modeling", "cfa", "cpa"],
+  Finance: ["finance", "accounting", "financial modeling", "cfa", "cpa", "bookkeeping", "audit", "tax"],
+  Nursing: ["patient care", "nursing", "clinical", "medication", "triage", "emr", "ehr"],
+  Teaching: ["curriculum", "lesson plan", "classroom", "instruction", "pedagogy", "student assessment"],
+  Legal: ["litigation", "legal research", "contract", "compliance", "case management"],
+  Hospitality: ["food service", "guest relations", "menu planning", "hospitality", "banquet"],
+  Construction: ["blueprint", "osha", "building codes", "construction", "renovation"],
+  Healthcare: ["healthcare", "medical", "clinical", "pharma", "hospital", "patient"],
+  Retail: ["retail", "point of sale", "merchandising", "inventory", "customer service"],
+  Manufacturing: ["lean", "six sigma", "production", "assembly", "quality control", "iso"],
+  "Human Resources": ["recruiting", "onboarding", "payroll", "benefits", "employee relations"],
+  Logistics: ["supply chain", "logistics", "warehouse", "freight", "shipping", "inventory"],
+  "Real Estate": ["real estate", "property", "leasing", "mortgage", "listing"],
+  Media: ["journalism", "broadcast", "editing", "news", "media production"],
+  Trades: ["electrical", "plumbing", "hvac", "welding", "carpentry"],
 };
 
-const JOB_TITLE_PATTERNS = [
-  /(?:^|\n)\s*(?:senior\s+|junior\s+|lead\s+|staff\s+|principal\s+)?([a-z\s\/]+(?:engineer|developer|manager|analyst|designer|architect|consultant|director|specialist|coordinator|administrator))\s*(?:\||,|\n|$)/gi,
-];
 
 const INDUSTRY_KEYWORDS: Record<string, string[]> = {
-  Technology: ["software", "tech", "engineering", "developer", "it ", "saas"],
-  Finance: ["finance", "banking", "investment", "fintech", "accounting"],
-  Healthcare: ["healthcare", "medical", "clinical", "pharma", "hospital"],
-  Marketing: ["marketing", "brand", "advertising", "digital marketing"],
-  Education: ["education", "teaching", "academic", "university"],
+  Technology: ["software", "tech", "engineering", "developer", "it ", "saas", "programming"],
+  Finance: ["finance", "banking", "investment", "fintech", "accounting", "audit", "tax"],
+  Healthcare: ["healthcare", "medical", "clinical", "pharma", "hospital", "nursing", "patient"],
+  Marketing: ["marketing", "brand", "advertising", "digital marketing", "campaign"],
+  Education: ["education", "teaching", "academic", "university", "school", "curriculum"],
   Consulting: ["consulting", "advisory", "strategy"],
+  Legal: ["legal", "law firm", "litigation", "attorney", "compliance"],
+  Hospitality: ["restaurant", "hotel", "hospitality", "food service", "culinary"],
+  Retail: ["retail", "store", "merchandise", "customer service", "sales floor"],
+  Manufacturing: ["manufacturing", "production", "factory", "assembly", "plant"],
+  Construction: ["construction", "building", "contractor", "renovation", "site"],
+  Government: ["government", "public sector", "municipal", "federal", "civil service"],
+  "Real Estate": ["real estate", "property", "realtor", "leasing", "mortgage"],
+  Media: ["media", "journalism", "broadcast", "news", "publishing"],
+  Transportation: ["transportation", "logistics", "shipping", "freight", "aviation"],
+  Agriculture: ["agriculture", "farm", "crop", "ranch", "environmental"],
+  Nonprofit: ["nonprofit", "ngo", "charity", "community", "social services"],
+  Trades: ["electrician", "plumber", "hvac", "welding", "carpentry", "skilled trade"],
 };
 
 const IN_DEMAND_SKILLS_2026 = [
@@ -68,48 +91,54 @@ function extractName(text: string): string {
   return "Professional";
 }
 
-function extractJobTitle(text: string): string {
-  const lower = text.toLowerCase();
-  const titles = [
-    "software engineer",
-    "full stack developer",
-    "frontend developer",
-    "backend developer",
-    "data scientist",
-    "data analyst",
-    "product manager",
-    "project manager",
-    "ux designer",
-    "ui designer",
-    "devops engineer",
-    "cloud architect",
-    "machine learning engineer",
-    "business analyst",
-    "marketing manager",
-    "sales manager",
-    "financial analyst",
-    "hr manager",
-    "consultant",
-  ];
+function extractJobTitle(text: string) {
+  return detectJob(text);
+}
 
-  for (const title of titles) {
-    if (lower.includes(title)) {
-      return title
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
+function detectIndustry(text: string, jobTitle: string, jobCategory: string): string {
+  if (jobCategory && jobCategory !== "General") {
+    const categoryToIndustry: Record<string, string> = {
+      "Technology & Engineering": "Technology",
+      "Healthcare & Medical": "Healthcare",
+      "Education & Teaching": "Education",
+      "Finance & Accounting": "Finance",
+      Legal: "Legal",
+      "Sales & Business": "Consulting",
+      "Marketing & Communications": "Marketing",
+      "Human Resources": "Consulting",
+      "Operations & Logistics": "Transportation",
+      "Creative & Design": "Marketing",
+      "Hospitality & Food Service": "Hospitality",
+      "Trades & Construction": "Construction",
+      "Science & Research": "Technology",
+      "Government & Public Service": "Government",
+      "Retail & Customer Service": "Retail",
+      "Manufacturing & Production": "Manufacturing",
+      "Real Estate": "Real Estate",
+      "Social Services & Nonprofit": "Nonprofit",
+      "Arts & Entertainment": "Media",
+      "Sports & Fitness": "Healthcare",
+      "Administrative & Office": "Consulting",
+      "Aviation & Transportation": "Transportation",
+      "Agriculture & Environment": "Agriculture",
+      "Media & Journalism": "Media",
+    };
+    if (categoryToIndustry[jobCategory]) return categoryToIndustry[jobCategory];
+  }
+
+  const combined = `${text} ${jobTitle}`.toLowerCase();
+  let bestMatch = "General";
+  let bestScore = 0;
+
+  for (const [industry, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {
+    const score = keywords.filter((k) => combined.includes(k)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = industry;
     }
   }
 
-  for (const pattern of JOB_TITLE_PATTERNS) {
-    pattern.lastIndex = 0;
-    const match = pattern.exec(text);
-    if (match?.[1]) {
-      return match[1].trim().replace(/\s+/g, " ");
-    }
-  }
-
-  return "Professional";
+  return bestMatch;
 }
 
 function extractYearsExperience(text: string): number {
@@ -138,22 +167,6 @@ function extractYearsExperience(text: string): number {
   }
 
   return maxYears || 3;
-}
-
-function detectIndustry(text: string, jobTitle: string): string {
-  const combined = `${text} ${jobTitle}`.toLowerCase();
-  let bestMatch = "General";
-  let bestScore = 0;
-
-  for (const [industry, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {
-    const score = keywords.filter((k) => combined.includes(k)).length;
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = industry;
-    }
-  }
-
-  return bestMatch;
 }
 
 function detectSkills(text: string): string[] {
@@ -293,28 +306,9 @@ function generateFeedback(text: string, sections: ResumeSection[], skills: strin
   return contentFeedback;
 }
 
-function identifySkillGaps(detectedSkills: string[], jobTitle: string): SkillGap[] {
-  const jobSkillMap: Record<string, string[]> = {
-    "Software Engineer": ["JavaScript", "Python", "Cloud Computing", "DevOps"],
-    "Data Scientist": ["Python", "Machine Learning", "Data Analysis", "Cloud Computing"],
-    "Data Analyst": ["Data Analysis", "Python", "Communication", "Project Management"],
-    "Product Manager": ["Project Management", "Communication", "Leadership", "Data Analysis"],
-    "Devops Engineer": ["DevOps", "Cloud Computing", "Python", "Cybersecurity"],
-    "Ux Designer": ["UI/UX Design", "Communication", "JavaScript", "Project Management"],
-    default: ["Communication", "Leadership", "Project Management", "Data Analysis"],
-  };
-
-  const normalizedTitle = jobTitle.toLowerCase();
-  let targetSkills = jobSkillMap.default;
-
-  for (const [role, skills] of Object.entries(jobSkillMap)) {
-    if (normalizedTitle.includes(role.toLowerCase())) {
-      targetSkills = skills;
-      break;
-    }
-  }
-
-  const allRelevant = [...new Set([...targetSkills, ...IN_DEMAND_SKILLS_2026.slice(0, 6)])];
+function identifySkillGaps(detectedSkills: string[], jobTitle: string, jobCategory: string): SkillGap[] {
+  const targetSkills = getSkillsForJob(jobTitle, jobCategory);
+  const allRelevant = [...new Set([...targetSkills, ...IN_DEMAND_SKILLS_2026.slice(0, 4)])];
   const gaps: SkillGap[] = [];
 
   for (const skill of allRelevant) {
@@ -334,13 +328,16 @@ function identifySkillGaps(detectedSkills: string[], jobTitle: string): SkillGap
 
 export function analyzeResume(text: string) {
   const name = extractName(text);
-  const jobTitle = extractJobTitle(text);
+  const jobDetection = extractJobTitle(text);
+  const jobTitle = jobDetection.jobTitle;
+  const jobCategory = jobDetection.jobCategory;
+  const jobConfidence = jobDetection.confidence;
   const yearsExperience = extractYearsExperience(text);
-  const industry = detectIndustry(text, jobTitle);
+  const industry = detectIndustry(text, jobTitle, jobCategory);
   const detectedSkills = detectSkills(text);
   const sections = analyzeSections(text);
   const feedback = generateFeedback(text, sections, detectedSkills);
-  const missingSkills = identifySkillGaps(detectedSkills, jobTitle);
+  const missingSkills = identifySkillGaps(detectedSkills, jobTitle, jobCategory);
 
   const layoutScore = Math.round(sections.filter((s) => s.found).length / sections.length * 100);
   const contentScore = Math.round(feedback.reduce((sum, f) => sum + f.score, 0) / feedback.length);
@@ -351,7 +348,14 @@ export function analyzeResume(text: string) {
   );
 
   return {
-    profile: { name, jobTitle, yearsExperience, industry },
+    profile: {
+      name,
+      jobTitle,
+      jobCategory,
+      jobConfidence,
+      yearsExperience,
+      industry,
+    },
     overallScore,
     layoutScore,
     contentScore,

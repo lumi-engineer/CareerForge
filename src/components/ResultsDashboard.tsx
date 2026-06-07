@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -10,9 +11,12 @@ import {
   Star,
   XCircle,
   AlertTriangle,
+  BadgeCheck,
 } from "lucide-react";
 import { ScoreRing } from "@/components/ScoreRing";
-import type { AnalysisResult, Course, ResumeFeedback, SkillGap } from "@/lib/types";
+import { BenchmarkComparisonSection } from "@/components/BenchmarkComparison";
+import { ImprovedResumeSection } from "@/components/ImprovedResumeSection";
+import type { AnalysisResult, Course, ImprovedResume, ResumeFeedback, SkillGap } from "@/lib/types";
 
 function FeedbackCard({ feedback }: { feedback: ResumeFeedback }) {
   const pct = Math.round((feedback.score / feedback.maxScore) * 100);
@@ -122,6 +126,16 @@ function CourseCard({ course }: { course: Course }) {
 }
 
 export function ResultsDashboard({ data }: { data: AnalysisResult }) {
+  const [improvedResume, setImprovedResume] = useState<ImprovedResume | undefined>(
+    data.improvedResume
+  );
+
+  const handleImproved = (improved: ImprovedResume) => {
+    setImprovedResume(improved);
+    const updated = { ...data, improvedResume: improved };
+    sessionStorage.setItem("careerforge-analysis", JSON.stringify(updated));
+  };
+
   return (
     <div className="space-y-12">
       <motion.section
@@ -141,6 +155,25 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
                 <Briefcase className="h-4 w-4 text-accent" />
                 {data.profile.jobTitle}
               </span>
+              {data.profile.jobCategory && data.profile.jobCategory !== "General" && (
+                <span className="rounded-full bg-accent/10 px-3 py-0.5 text-xs text-accent ring-1 ring-accent/20">
+                  {data.profile.jobCategory}
+                </span>
+              )}
+              {data.profile.jobConfidence && (
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-medium ${
+                    data.profile.jobConfidence === "high"
+                      ? "text-success"
+                      : data.profile.jobConfidence === "medium"
+                        ? "text-accent"
+                        : "text-muted"
+                  }`}
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  {data.profile.jobConfidence} confidence
+                </span>
+              )}
               <span>{data.profile.yearsExperience}+ years experience</span>
               <span>{data.profile.industry}</span>
             </div>
@@ -180,6 +213,21 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
           ))}
         </div>
       </section>
+
+      {(data.benchmarkComparisons?.length ?? 0) > 0 && (
+        <BenchmarkComparisonSection
+          comparisons={data.benchmarkComparisons}
+          bestMatchArchetype={data.bestMatchArchetype ?? data.benchmarkComparisons[0]?.name ?? ""}
+        />
+      )}
+
+      {data.originalText && (
+        <ImprovedResumeSection
+          analysis={data}
+          improvedResume={improvedResume}
+          onImproved={handleImproved}
+        />
+      )}
 
       <section>
         <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold mb-6">

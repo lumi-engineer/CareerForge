@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeResume } from "@/lib/resume-analyzer";
+import { compareAgainstBenchmarks, getBestMatchingArchetype } from "@/lib/benchmark-resumes";
 import { scrapeCourses } from "@/lib/course-scraper";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
     }
 
     const analysis = analyzeResume(text);
+    const benchmarkComparisons = compareAgainstBenchmarks(analysis);
+    const bestMatch = getBestMatchingArchetype(benchmarkComparisons);
+
     const missingSkillNames = analysis.skills.missing.map((g) => g.skill);
     const courses = await scrapeCourses(
       missingSkillNames,
@@ -55,6 +59,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       ...analysis,
+      originalText: text,
+      benchmarkComparisons,
+      bestMatchArchetype: bestMatch.name,
       courses,
     };
 

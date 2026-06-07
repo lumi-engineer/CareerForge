@@ -20,7 +20,7 @@ const features = [
     icon: FileSearch,
     title: "Resume Scanner",
     description:
-      "Upload your PDF resume and our AI extracts your job title, skills, experience, and evaluates your layout structure.",
+      "Upload any resume — nurse, teacher, engineer, chef, lawyer, and 150+ other roles. We detect your job title, category, and industry automatically.",
   },
   {
     icon: MessageSquare,
@@ -50,10 +50,10 @@ const steps = [
 ];
 
 const stats = [
+  { value: "150+", label: "Job Roles Detected" },
+  { value: "24", label: "Career Categories" },
   { value: "10K+", label: "Courses Indexed" },
   { value: "50+", label: "Skills Tracked" },
-  { value: "5", label: "Platforms Scraped" },
-  { value: "98%", label: "Analysis Accuracy" },
 ];
 
 export default function HomePage() {

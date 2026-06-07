@@ -4,8 +4,10 @@ Forge your career path with AI-powered resume analysis and personalized course r
 
 ## Features
 
-- **Resume Scanner** — Upload a PDF resume for automatic extraction of job title, skills, experience, and layout analysis
+- **Resume Scanner** — Upload a PDF resume; automatically detects job title, career category, and industry across 150+ roles and 24 fields
 - **Resume Feedback** — Compare your resume against best practices with scores for layout, content, skills alignment, and ATS compatibility
+- **Benchmark Comparison** — Analyze your resume against 8 professional archetypes (entry-level, executive, technical, creative, ATS-optimized, and more)
+- **Resume Improvement** — Built-in automatic resume rewrite (works out of the box; optional OpenAI upgrade for advanced rewriting)
 - **Web Scraping** — AI-powered course discovery across Coursera, Udemy, edX, LinkedIn Learning, and more
 - **Course Suggestions** — Personalized recommendations based on your skill gaps and in-demand market skills
 
@@ -17,6 +19,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+Everything works without any API keys. Resume improvement uses CareerForge's built-in engine by default.
 
 ## Tech Stack
 
