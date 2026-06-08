@@ -1,21 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Flame, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Flame, Menu, X, LogOut, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/analyze", label: "Analyze Resume" },
+  { href: "/history", label: "History" },
   { href: "/#features", label: "Features" },
-  { href: "/#how-it-works", label: "How It Works" },
 ];
+
+interface SessionUser {
+  id: string;
+  email: string;
+  name: string | null;
+}
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.user) setUser(data.user);
+      });
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -29,7 +52,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -41,12 +64,37 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/analyze"
-            className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
-          >
-            Get Started
-          </Link>
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted flex items-center gap-1.5 max-w-[160px] truncate">
+                <User className="h-4 w-4 shrink-0" />
+                {user.name || user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted hover:text-foreground transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted hover:text-foreground transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
 
         <button
@@ -77,13 +125,26 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/analyze"
-                onClick={() => setMobileOpen(false)}
-                className="mt-2 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-background"
-              >
-                Get Started
-              </Link>
+              {user ? (
+                <>
+                  <p className="px-4 py-2 text-sm text-muted">{user.email}</p>
+                  <button
+                    onClick={() => { handleLogout(); setMobileOpen(false); }}
+                    className="rounded-lg px-4 py-3 text-sm font-medium text-muted hover:bg-surface-elevated text-left"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded-lg px-4 py-3 text-sm font-medium text-muted hover:bg-surface-elevated">
+                    Sign In
+                  </Link>
+                  <Link href="/signup" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-background">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

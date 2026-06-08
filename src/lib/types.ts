@@ -57,11 +57,20 @@ export interface BenchmarkComparison {
   sectionsPresent: string[];
 }
 
+export interface GeminiInsights {
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  detectedJobTitle?: string;
+  detectedJobCategory?: string;
+}
+
 export interface ImprovedResume {
   improvedText: string;
   changesSummary: string[];
   estimatedScore: number;
-  engine?: "built-in" | "openai";
+  engine?: "built-in" | "openai" | "gemini";
   improvedAnalysis?: {
     overallScore: number;
     layoutScore: number;
@@ -96,6 +105,8 @@ export interface AnalysisResult {
   benchmarkComparisons: BenchmarkComparison[];
   bestMatchArchetype: string;
   improvedResume?: ImprovedResume;
+  geminiInsights?: GeminiInsights;
+  analyzedWith?: "gemini" | "local";
 }
 
 export interface AnalyzeResponse {

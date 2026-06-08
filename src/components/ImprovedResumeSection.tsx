@@ -87,7 +87,7 @@ export function ImprovedResumeSection({
             Resume Improvement
           </h3>
           <p className="text-muted mt-1">
-            Automatically rewrites your resume using analysis feedback — no account or API key needed.
+            Automatically rewrites your resume using Gemini AI and analysis feedback.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export function ImprovedResumeSection({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Improving resume...
+                Improving with Gemini...
               </>
             ) : (
               <>

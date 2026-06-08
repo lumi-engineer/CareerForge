@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeResume } from "@/lib/resume-analyzer";
-import { improveResumeWithAI } from "@/lib/openai";
-import { improveResumeLocally, hasOpenAIKey } from "@/lib/resume-improver";
+import { improveResumeWithGemini, hasGeminiKey } from "@/lib/gemini";
+import { improveResumeLocally } from "@/lib/resume-improver";
+import { requireAuth, AuthError } from "@/lib/auth";
 import type { AnalysisResult, ImproveResumeResponse } from "@/lib/types";
 
 export async function POST(request: NextRequest): Promise<NextResponse<ImproveResumeResponse>> {
   try {
+    await requireAuth();
+
     const body = await request.json();
     const { originalText, analysis } = body as {
       originalText?: string;
@@ -19,9 +22,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
       );
     }
 
-    const improved = hasOpenAIKey()
-      ? await improveResumeWithAI(originalText, analysis)
-      : improveResumeLocally(originalText, analysis);
+    let improved;
+    let engine: "gemini" | "built-in" = "built-in";
+
+    if (hasGeminiKey()) {
+      try {
+        improved = await improveResumeWithGemini(originalText, analysis);
+        engine = "gemini";
+      } catch (err) {
+        console.warn("Gemini improve failed, using built-in:", err);
+        improved = improveResumeLocally(originalText, analysis);
+      }
+    } else {
+      improved = improveResumeLocally(originalText, analysis);
+    }
 
     const improvedAnalysis = analyzeResume(improved.improvedText);
 
@@ -29,7 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
       success: true,
       data: {
         ...improved,
-        engine: hasOpenAIKey() ? "openai" : "built-in",
+        engine,
         improvedAnalysis: {
           overallScore: improvedAnalysis.overallScore,
           layoutScore: improvedAnalysis.layoutScore,
@@ -38,6 +52,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
     console.error("Resume improvement error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to improve resume. Please try again.";

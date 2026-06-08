@@ -1,5 +1,10 @@
 import type { AnalysisResult } from "./types";
-import type { ImprovedResumeResult } from "./openai";
+
+export interface ImprovedResumeResult {
+  improvedText: string;
+  changesSummary: string[];
+  estimatedScore: number;
+}
 
 const ACTION_VERB_MAP: Record<string, string> = {
   worked: "Contributed",

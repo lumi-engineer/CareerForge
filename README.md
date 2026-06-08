@@ -4,50 +4,47 @@ Forge your career path with AI-powered resume analysis and personalized course r
 
 ## Features
 
-- **Resume Scanner** — Upload a PDF resume; automatically detects job title, career category, and industry across 150+ roles and 24 fields
-- **Resume Feedback** — Compare your resume against best practices with scores for layout, content, skills alignment, and ATS compatibility
-- **Benchmark Comparison** — Analyze your resume against 8 professional archetypes (entry-level, executive, technical, creative, ATS-optimized, and more)
-- **Resume Improvement** — Built-in automatic resume rewrite (works out of the box; optional OpenAI upgrade for advanced rewriting)
-- **Web Scraping** — AI-powered course discovery across Coursera, Udemy, edX, LinkedIn Learning, and more
-- **Course Suggestions** — Personalized recommendations based on your skill gaps and in-demand market skills
+- **Email Sign Up** — Create an account to analyze and save your resume history
+- **Resume Scanner** — Detects job title, career category, and industry across 150+ roles
+- **Gemini AI Analysis** — Google Gemini free tier powers smart resume analysis and rewriting
+- **Analysis History** — View all users' resume analyses in one place
+- **Benchmark Comparison** — Compare against 8 professional resume archetypes
+- **Course Suggestions** — Personalized recommendations based on skill gaps
 
 ## Getting Started
 
 ```bash
 npm install
+npm run db:push
+cp .env.example .env.local   # add your GEMINI_API_KEY
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-Everything works without any API keys. Resume improvement uses CareerForge's built-in engine by default.
+### Gemini API (Free)
 
-## Tech Stack
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
+2. Create a free API key
+3. Add it to `.env.local`:
 
-- Next.js 15 (App Router)
-- TypeScript
-- Tailwind CSS 4
-- Framer Motion
-- pdf-parse for PDF text extraction
+```
+GEMINI_API_KEY=your-key-here
+```
+
+The free tier includes generous limits for `gemini-1.5-flash`. Without a key, local analysis still works but Gemini insights and AI resume rewriting use the built-in engine.
 
 ## Usage
 
-1. Visit the homepage and click **Analyze My Resume**
-2. Upload your PDF resume (max 10MB, text-selectable PDFs work best)
-3. Review your scores, feedback, skill gaps, and recommended courses
+1. **Sign up** at `/signup` with your email
+2. **Upload** your PDF resume at `/analyze`
+3. **Review** scores, Gemini AI insights, and course recommendations
+4. **Improve** your resume with one click
+5. **Browse** everyone's analyses at `/history`
 
-## Project Structure
+## Tech Stack
 
-```
-src/
-├── app/
-│   ├── api/analyze/    # Resume analysis API endpoint
-│   ├── analyze/        # Upload page
-│   ├── results/        # Analysis results dashboard
-│   └── page.tsx        # Landing page
-├── components/         # UI components
-└── lib/
-    ├── resume-analyzer.ts  # Resume parsing & feedback engine
-    ├── course-scraper.ts   # Course recommendation engine
-    └── types.ts
-```
+- Next.js 15, TypeScript, Tailwind CSS 4
+- Prisma + SQLite (user accounts & history)
+- Google Gemini API (free tier)
+- pdf-parse for PDF extraction

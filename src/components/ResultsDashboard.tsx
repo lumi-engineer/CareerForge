@@ -12,6 +12,9 @@ import {
   XCircle,
   AlertTriangle,
   BadgeCheck,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { ScoreRing } from "@/components/ScoreRing";
 import { BenchmarkComparisonSection } from "@/components/BenchmarkComparison";
@@ -185,6 +188,57 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
           </div>
         </div>
       </motion.section>
+
+      {data.geminiInsights && (
+        <section className="card-glow rounded-2xl bg-surface-elevated p-8">
+          <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold mb-2 flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-accent" />
+            Gemini AI Analysis
+          </h3>
+          <p className="text-muted mb-6">{data.geminiInsights.summary}</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-success mb-3 flex items-center gap-2">
+                <ThumbsUp className="h-4 w-4" /> Strengths
+              </h4>
+              <ul className="space-y-2">
+                {data.geminiInsights.strengths.map((s, i) => (
+                  <li key={i} className="text-sm text-muted flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-danger mb-3 flex items-center gap-2">
+                <ThumbsDown className="h-4 w-4" /> Areas to Improve
+              </h4>
+              <ul className="space-y-2">
+                {data.geminiInsights.weaknesses.map((w, i) => (
+                  <li key={i} className="text-sm text-muted flex gap-2">
+                    <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
+                    {w}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          {data.geminiInsights.recommendations.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <h4 className="text-sm font-medium mb-3">AI Recommendations</h4>
+              <ul className="space-y-2">
+                {data.geminiInsights.recommendations.map((r, i) => (
+                  <li key={i} className="text-sm text-muted flex gap-2">
+                    <Sparkles className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       <section>
         <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold mb-6">
