@@ -57,7 +57,7 @@ export interface BenchmarkComparison {
   sectionsPresent: string[];
 }
 
-export interface GeminiInsights {
+export interface AIInsights {
   summary: string;
   strengths: string[];
   weaknesses: string[];
@@ -66,11 +66,14 @@ export interface GeminiInsights {
   detectedJobCategory?: string;
 }
 
+/** @deprecated use AIInsights */
+export type GeminiInsights = AIInsights;
+
 export interface ImprovedResume {
   improvedText: string;
   changesSummary: string[];
   estimatedScore: number;
-  engine?: "built-in" | "openai" | "gemini";
+  engine?: "built-in" | "openrouter" | "gemini";
   improvedAnalysis?: {
     overallScore: number;
     layoutScore: number;
@@ -105,8 +108,10 @@ export interface AnalysisResult {
   benchmarkComparisons: BenchmarkComparison[];
   bestMatchArchetype: string;
   improvedResume?: ImprovedResume;
-  geminiInsights?: GeminiInsights;
-  analyzedWith?: "gemini" | "local";
+  aiInsights?: AIInsights;
+  /** @deprecated use aiInsights */
+  geminiInsights?: AIInsights;
+  analyzedWith?: "openrouter" | "gemini" | "local";
 }
 
 export interface AnalyzeResponse {

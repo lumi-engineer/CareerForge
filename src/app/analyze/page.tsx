@@ -9,7 +9,7 @@ import { ResumeUploader } from "@/components/ResumeUploader";
 
 const analysisSteps = [
   { icon: FileSearch, label: "Scanning resume layout & content" },
-  { icon: Sparkles, label: "Gemini AI analyzing your profile" },
+  { icon: Sparkles, label: "OpenRouter AI analyzing your profile" },
   { icon: MessageSquare, label: "Comparing against top resumes" },
   { icon: Globe, label: "Scraping course platforms" },
   { icon: BookOpen, label: "Building personalized recommendations" },
@@ -94,7 +94,7 @@ export default function AnalyzePage() {
             Upload Your <span className="gradient-text">Resume</span>
           </h1>
           <p className="text-muted text-lg max-w-xl mx-auto">
-            Gemini AI scans your resume, detects your job, and finds courses to close skill gaps.
+            OpenRouter AI scans your resume, detects your job, and finds courses to close skill gaps.
           </p>
         </motion.div>
 
@@ -129,7 +129,7 @@ export default function AnalyzePage() {
         <div className="mt-16 grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
           {[
             { title: "Secure", desc: "Your account keeps your analysis history saved." },
-            { title: "Gemini AI", desc: "Powered by Google Gemini free tier for smart analysis." },
+            { title: "OpenRouter AI", desc: "Powered by free-tier models via OpenRouter." },
             { title: "150+ Jobs", desc: "Detects job titles across every profession." },
           ].map((item) => (
             <div key={item.title} className="text-center">
@@ -141,8 +141,8 @@ export default function AnalyzePage() {
 
         <p className="text-center text-xs text-muted mt-8">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-accent hover:underline">
-            Sign up free
+          <Link href="/login" className="text-accent hover:underline">
+            Sign in with Google
           </Link>
         </p>
       </div>

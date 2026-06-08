@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeResume } from "@/lib/resume-analyzer";
 import { compareAgainstBenchmarks, getBestMatchingArchetype } from "@/lib/benchmark-resumes";
 import { scrapeCourses } from "@/lib/course-scraper";
-import { analyzeWithGemini, hasGeminiKey } from "@/lib/gemini";
+import { analyzeWithOpenRouter, hasOpenRouterKey } from "@/lib/openrouter";
 import { requireAuth, AuthError } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { AnalyzeResponse, AnalysisResult } from "@/lib/types";
@@ -58,10 +58,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
       profile.yearsExperience
     );
 
-    let geminiInsights;
-    if (hasGeminiKey()) {
+    let aiInsights;
+    if (hasOpenRouterKey()) {
       try {
-        geminiInsights = await analyzeWithGemini(text, {
+        aiInsights = await analyzeWithOpenRouter(text, {
           profile,
           overallScore: analysis.overallScore,
           layoutScore: analysis.layoutScore,
@@ -72,14 +72,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
           rawTextLength: analysis.rawTextLength,
         });
 
-        if (geminiInsights.detectedJobTitle) {
-          profile.jobTitle = geminiInsights.detectedJobTitle;
+        if (aiInsights.detectedJobTitle) {
+          profile.jobTitle = aiInsights.detectedJobTitle;
         }
-        if (geminiInsights.detectedJobCategory) {
-          profile.jobCategory = geminiInsights.detectedJobCategory;
+        if (aiInsights.detectedJobCategory) {
+          profile.jobCategory = aiInsights.detectedJobCategory;
         }
       } catch (err) {
-        console.warn("Gemini analysis skipped:", err);
+        console.warn("OpenRouter analysis skipped:", err);
       }
     }
 
@@ -92,8 +92,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
       benchmarkComparisons,
       bestMatchArchetype: bestMatch.name,
       courses,
-      geminiInsights,
-      analyzedWith: hasGeminiKey() ? "gemini" : "local",
+      aiInsights,
+      analyzedWith: hasOpenRouterKey() && aiInsights ? "openrouter" : "local",
     };
 
     await prisma.analysis.create({

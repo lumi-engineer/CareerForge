@@ -1,12 +1,5 @@
-import { Suspense } from "react";
-import { AuthForm } from "@/components/AuthForm";
+import { redirect } from "next/navigation";
 
 export default function SignupPage() {
-  return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-6 py-16">
-      <Suspense fallback={<div className="text-muted">Loading...</div>}>
-        <AuthForm mode="signup" />
-      </Suspense>
-    </div>
-  );
+  redirect("/login");
 }

@@ -133,6 +133,8 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
     data.improvedResume
   );
 
+  const aiInsights = data.aiInsights ?? data.geminiInsights;
+
   const handleImproved = (improved: ImprovedResume) => {
     setImprovedResume(improved);
     const updated = { ...data, improvedResume: improved };
@@ -189,20 +191,20 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
         </div>
       </motion.section>
 
-      {data.geminiInsights && (
+      {aiInsights && (
         <section className="card-glow rounded-2xl bg-surface-elevated p-8">
           <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold mb-2 flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-accent" />
-            Gemini AI Analysis
+            AI Analysis
           </h3>
-          <p className="text-muted mb-6">{data.geminiInsights.summary}</p>
+          <p className="text-muted mb-6">{aiInsights.summary}</p>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h4 className="text-sm font-medium text-success mb-3 flex items-center gap-2">
                 <ThumbsUp className="h-4 w-4" /> Strengths
               </h4>
               <ul className="space-y-2">
-                {data.geminiInsights.strengths.map((s, i) => (
+                {aiInsights.strengths.map((s, i) => (
                   <li key={i} className="text-sm text-muted flex gap-2">
                     <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                     {s}
@@ -215,7 +217,7 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
                 <ThumbsDown className="h-4 w-4" /> Areas to Improve
               </h4>
               <ul className="space-y-2">
-                {data.geminiInsights.weaknesses.map((w, i) => (
+                {aiInsights.weaknesses.map((w, i) => (
                   <li key={i} className="text-sm text-muted flex gap-2">
                     <XCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
                     {w}
@@ -224,11 +226,11 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
               </ul>
             </div>
           </div>
-          {data.geminiInsights.recommendations.length > 0 && (
+          {aiInsights.recommendations.length > 0 && (
             <div className="mt-6 pt-6 border-t border-border/50">
               <h4 className="text-sm font-medium mb-3">AI Recommendations</h4>
               <ul className="space-y-2">
-                {data.geminiInsights.recommendations.map((r, i) => (
+                {aiInsights.recommendations.map((r, i) => (
                   <li key={i} className="text-sm text-muted flex gap-2">
                     <Sparkles className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                     {r}

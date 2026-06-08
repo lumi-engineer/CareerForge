@@ -51,10 +51,10 @@ export default function HistoryPage() {
             <History className="h-12 w-12 text-muted mx-auto mb-4" />
             <p className="text-muted mb-6">No analyses yet. Be the first to upload a resume!</p>
             <Link
-              href="/signup"
+              href="/login"
               className="inline-flex rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
             >
-              Sign Up & Analyze
+              Sign In & Analyze
             </Link>
           </div>
         ) : (

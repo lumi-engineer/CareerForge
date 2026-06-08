@@ -83,15 +83,9 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted hover:text-foreground transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/signup"
                 className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
               >
-                Sign Up
+                Sign In with Google
               </Link>
             </div>
           )}
@@ -137,11 +131,8 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/login" onClick={() => setMobileOpen(false)} className="rounded-lg px-4 py-3 text-sm font-medium text-muted hover:bg-surface-elevated">
-                    Sign In
-                  </Link>
-                  <Link href="/signup" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-background">
-                    Sign Up
+                  <Link href="/login" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-accent px-4 py-3 text-center text-sm font-semibold text-background">
+                    Sign In with Google
                   </Link>
                 </>
               )}

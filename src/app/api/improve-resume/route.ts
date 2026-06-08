@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeResume } from "@/lib/resume-analyzer";
-import { improveResumeWithGemini, hasGeminiKey } from "@/lib/gemini";
+import { improveResumeWithOpenRouter, hasOpenRouterKey } from "@/lib/openrouter";
 import { improveResumeLocally } from "@/lib/resume-improver";
 import { requireAuth, AuthError } from "@/lib/auth";
 import type { AnalysisResult, ImproveResumeResponse } from "@/lib/types";
@@ -23,14 +23,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
     }
 
     let improved;
-    let engine: "gemini" | "built-in" = "built-in";
+    let engine: "openrouter" | "built-in" = "built-in";
 
-    if (hasGeminiKey()) {
+    if (hasOpenRouterKey()) {
       try {
-        improved = await improveResumeWithGemini(originalText, analysis);
-        engine = "gemini";
+        improved = await improveResumeWithOpenRouter(originalText, analysis);
+        engine = "openrouter";
       } catch (err) {
-        console.warn("Gemini improve failed, using built-in:", err);
+        console.warn("OpenRouter improve failed, using built-in:", err);
         improved = improveResumeLocally(originalText, analysis);
       }
     } else {

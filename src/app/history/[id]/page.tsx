@@ -65,9 +65,9 @@ export default function HistoryDetailPage() {
           {meta && (
             <p className="text-muted mt-1 text-sm">
               By {meta.userName || meta.userEmail} · {new Date(meta.createdAt).toLocaleString()}
-              {data.analyzedWith === "gemini" && (
+              {data.analyzedWith === "openrouter" && (
                 <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
-                  Gemini AI
+                  OpenRouter AI
                 </span>
               )}
             </p>

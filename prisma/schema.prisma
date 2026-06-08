@@ -8,12 +8,12 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime   @default(now())
-  analyses     Analysis[]
+  id        String     @id
+  email     String     @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime   @default(now())
+  analyses  Analysis[]
 }
 
 model Analysis {
