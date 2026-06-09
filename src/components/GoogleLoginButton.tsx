@@ -10,9 +10,12 @@ export function GoogleLoginButton() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/analyze";
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    searchParams.get("error") === "auth" ? "Sign in failed. Please try again." : null
-  );
+  const [error, setError] = useState<string | null>(() => {
+    const err = searchParams.get("error");
+    if (err === "auth") return "Sign in failed. Please try again.";
+    if (err === "config") return "Server misconfiguration: Supabase environment variables are missing on Vercel.";
+    return null;
+  });
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -28,11 +31,20 @@ export function GoogleLoginButton() {
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(
+          authError.message.includes("Supabase is not configured")
+            ? "Supabase is not configured on the server. Add environment variables in Vercel (or .env.local locally)."
+            : authError.message
+        );
         setLoading(false);
       }
-    } catch {
-      setError("Failed to start Google sign in.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to start Google sign in.";
+      setError(
+        message.includes("Supabase is not configured")
+          ? "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel → Settings → Environment Variables."
+          : message
+      );
       setLoading(false);
     }
   };

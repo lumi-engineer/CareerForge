@@ -190,16 +190,29 @@ export async function scrapeCourses(
 
   const skillNames = missingSkills.length > 0 ? missingSkills : detectedSkills;
 
-  const ranked = COURSE_DATABASE.map((course, index) => ({
+  type ScoredCourse = Course & { score: number };
+
+  const ranked: ScoredCourse[] = COURSE_DATABASE.map((course, index) => ({
     ...course,
     id: `course-${index + 1}`,
-    _score: scoreCourse(course, skillNames, detectedSkills, jobTitle, yearsExperience),
+    score: scoreCourse(course, skillNames, detectedSkills, jobTitle, yearsExperience),
   }))
-    .sort((a, b) => b._score - a._score)
-    .slice(0, 6)
-    .map(({ _score, ...course }) => course);
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
 
-  return ranked;
+  return ranked.map(({ id, title, provider, platform, url, duration, rating, level, skills, price, description }) => ({
+    id,
+    title,
+    provider,
+    platform,
+    url,
+    duration,
+    rating,
+    level,
+    skills,
+    price,
+    description,
+  }));
 }
 
 export function getScraperStatus(): { platforms: string[]; coursesIndexed: number } {

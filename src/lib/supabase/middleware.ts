@@ -1,13 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabaseEnv } from "./env";
 
 export async function updateSession(request: NextRequest) {
+  const env = getSupabaseEnv();
+
+  if (!env) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  try {
+    const supabase = createServerClient(env.url, env.key, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -20,10 +25,13 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
-    }
-  );
+    });
 
-  await supabase.auth.getUser();
+    await supabase.auth.getUser();
+  } catch (error) {
+    console.error("Supabase middleware error:", error);
+    return NextResponse.next({ request });
+  }
 
   return supabaseResponse;
 }

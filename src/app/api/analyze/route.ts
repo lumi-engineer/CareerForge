@@ -3,7 +3,7 @@ import { analyzeResume } from "@/lib/resume-analyzer";
 import { compareAgainstBenchmarks, getBestMatchingArchetype } from "@/lib/benchmark-resumes";
 import { scrapeCourses } from "@/lib/course-scraper";
 import { analyzeWithOpenRouter, hasOpenRouterKey } from "@/lib/openrouter";
-import { requireAuth, AuthError } from "@/lib/auth";
+import { requireAuth, AuthError, ensureUserRecord } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { AnalyzeResponse, AnalysisResult } from "@/lib/types";
 
@@ -96,17 +96,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
       analyzedWith: hasOpenRouterKey() && aiInsights ? "openrouter" : "local",
     };
 
-    await prisma.analysis.create({
-      data: {
-        id: result.id,
-        userId: user.id,
-        fileName: file.name,
-        jobTitle: result.profile.jobTitle,
-        jobCategory: result.profile.jobCategory,
-        overallScore: result.overallScore,
-        resultJson: JSON.stringify(result),
-      },
-    });
+    try {
+      await ensureUserRecord(user);
+      await prisma.analysis.create({
+        data: {
+          id: result.id,
+          userId: user.id,
+          fileName: file.name,
+          jobTitle: result.profile.jobTitle,
+          jobCategory: result.profile.jobCategory,
+          overallScore: result.overallScore,
+          resultJson: JSON.stringify(result),
+        },
+      });
+    } catch (dbError) {
+      console.error("Analysis saved to session only (database unavailable):", dbError);
+    }
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

@@ -43,20 +43,47 @@ export async function requireAuth(): Promise<SessionUser> {
 export async function upsertUserFromSupabase(user: SupabaseUser): Promise<void> {
   if (!user.email) return;
 
-  await prisma.user.upsert({
-    where: { id: user.id },
-    create: {
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-      avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
-    },
-    update: {
-      email: user.email,
-      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-      avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
-    },
-  });
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+        avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+      },
+      update: {
+        email: user.email,
+        name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+        avatarUrl: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to upsert user in database:", error);
+    throw error;
+  }
+}
+
+export async function ensureUserRecord(user: SessionUser): Promise<void> {
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+      },
+      update: {
+        email: user.email,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to ensure user record:", error);
+    throw error;
+  }
 }
 
 export async function signOut(): Promise<void> {

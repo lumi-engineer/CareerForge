@@ -55,9 +55,27 @@ Open [http://localhost:3000](http://localhost:3000).
 4. **Improve** your resume with one click
 5. **Browse** everyone's analyses at `/history`
 
-## Tech Stack
+## Deploying to Vercel
 
-- Next.js 15, TypeScript, Tailwind CSS 4
-- Supabase Auth (Google OAuth)
-- OpenRouter API
-- Prisma + SQLite
+Add these **Environment Variables** in Vercel → Project → Settings → Environment Variables:
+
+| Variable | Value |
+|----------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://jwtthwnknpwljmhjohmf.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase **anon public** key (Settings → API) |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key |
+| `DATABASE_URL` | `file:./dev.db` (local only — use Vercel Postgres or Turso for production) |
+| `NEXT_PUBLIC_SITE_URL` | Your Vercel URL, e.g. `https://your-app.vercel.app` |
+
+Also add your Vercel URL to Supabase redirect URLs:
+```
+https://your-app.vercel.app/auth/callback
+```
+
+> **Note:** For production, SQLite won't persist on Vercel serverless. Consider switching to Supabase Postgres or Turso for the analysis history database.
+
+### Fixing `MIDDLEWARE_INVOCATION_FAILED`
+
+This error usually means Supabase env vars are missing on Vercel. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, then redeploy.
+
+Use the **anon public** key from Supabase Dashboard → Settings → API (starts with `eyJ...`), not a placeholder key.

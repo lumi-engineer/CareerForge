@@ -108,7 +108,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
           >
-            {stats.map((stat, i) => (
+            {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="font-[family-name:var(--font-display)] text-3xl md:text-4xl font-bold gradient-text">
                   {stat.value}
