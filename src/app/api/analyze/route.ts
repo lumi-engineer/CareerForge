@@ -61,8 +61,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeRe
       parsedResume = await parseResumeWithAI(rawText);
     } catch (aiError) {
       console.error("AI parse failed:", aiError);
+      const detail = aiError instanceof Error ? aiError.message : "Unknown error";
+      const isModelError = detail.includes("404") || detail.includes("No endpoints found");
       return NextResponse.json(
-        { success: false, error: "AI resume parsing failed. Please try again." },
+        {
+          success: false,
+          error: isModelError
+            ? "AI model unavailable. Update OPENROUTER_MODEL or try again in a moment."
+            : "AI resume parsing failed. Please try again.",
+        },
         { status: 500 }
       );
     }

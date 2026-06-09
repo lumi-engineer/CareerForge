@@ -1,7 +1,27 @@
 import type { ParsedResume, ATSScore, AIInsights } from "./types";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-2.0-flash-exp:free";
+const FALLBACK_MODELS = [
+  "openrouter/free",
+  "google/gemini-2.0-flash-001:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "google/gemma-3-12b-it:free",
+] as const;
+
+function getModelCandidates(): string[] {
+  const configured = process.env.OPENROUTER_MODEL?.trim();
+  const candidates = configured ? [configured, ...FALLBACK_MODELS] : [...FALLBACK_MODELS];
+  return [...new Set(candidates)];
+}
+
+function isModelUnavailableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message.includes("404") ||
+    error.message.includes("No endpoints found") ||
+    error.message.includes("not found")
+  );
+}
 
 export function hasOpenRouterKey(): boolean {
   return Boolean(process.env.OPENROUTER_API_KEY?.trim());
@@ -29,10 +49,50 @@ export interface CoverLetterResult {
 
 async function parseJsonResponse<T>(text: string): Promise<T> {
   const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
-  return JSON.parse(cleaned) as T;
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(cleaned.slice(start, end + 1)) as T;
+    }
+    throw new Error("OpenRouter returned invalid JSON.");
+  }
 }
 
-async function chatJson<T>(systemPrompt: string, userPrompt: string, temperature = 0.3): Promise<T> {
+function normalizeParsedResume(raw: Partial<ParsedResume>): ParsedResume {
+  return {
+    name: raw.name?.trim() || "Unknown",
+    email: raw.email ?? null,
+    phone: raw.phone ?? null,
+    linkedin: raw.linkedin ?? null,
+    location: raw.location ?? null,
+    summary: raw.summary ?? null,
+    jobTitle: raw.jobTitle?.trim() || "Professional",
+    jobCategory: raw.jobCategory?.trim() || "General",
+    yearsExperience:
+      typeof raw.yearsExperience === "number" && Number.isFinite(raw.yearsExperience)
+        ? raw.yearsExperience
+        : 0,
+    industry: raw.industry?.trim() || "General",
+    skills: {
+      technical: Array.isArray(raw.skills?.technical) ? raw.skills.technical : [],
+      soft: Array.isArray(raw.skills?.soft) ? raw.skills.soft : [],
+    },
+    experience: Array.isArray(raw.experience) ? raw.experience : [],
+    education: Array.isArray(raw.education) ? raw.education : [],
+    certifications: Array.isArray(raw.certifications) ? raw.certifications : undefined,
+    languages: Array.isArray(raw.languages) ? raw.languages : undefined,
+  };
+}
+
+async function chatJsonOnce<T>(
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  temperature = 0.3
+): Promise<T> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey?.trim()) {
     throw new Error("OPENROUTER_API_KEY is not configured.");
@@ -47,7 +107,7 @@ async function chatJson<T>(systemPrompt: string, userPrompt: string, temperature
       "X-Title": "CareerForge",
     },
     body: JSON.stringify({
-      model: process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL,
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -59,7 +119,7 @@ async function chatJson<T>(systemPrompt: string, userPrompt: string, temperature
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`OpenRouter error (${response.status}): ${errText}`);
+    throw new Error(`OpenRouter error (${response.status}) [${model}]: ${errText}`);
   }
 
   const data = (await response.json()) as {
@@ -68,10 +128,29 @@ async function chatJson<T>(systemPrompt: string, userPrompt: string, temperature
 
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error("OpenRouter returned an empty response.");
+    throw new Error(`OpenRouter returned an empty response [${model}].`);
   }
 
   return parseJsonResponse<T>(content);
+}
+
+async function chatJson<T>(systemPrompt: string, userPrompt: string, temperature = 0.3): Promise<T> {
+  const models = getModelCandidates();
+  let lastError: Error | null = null;
+
+  for (const model of models) {
+    try {
+      return await chatJsonOnce<T>(model, systemPrompt, userPrompt, temperature);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`OpenRouter model failed (${model}):`, lastError.message);
+      if (!isModelUnavailableError(lastError)) {
+        throw lastError;
+      }
+    }
+  }
+
+  throw lastError ?? new Error("All OpenRouter models failed.");
 }
 
 const PARSE_SYSTEM = `You are an expert resume parser. Extract ALL information from messy resume text into clean structured JSON. Fix OCR errors, merge broken lines, and infer missing structure. Never invent employers or degrees not present in the source. Always respond with valid JSON only.`;
@@ -101,7 +180,8 @@ Raw resume text (may be poorly extracted — reconstruct intelligently):
 ${rawText.slice(0, 12000)}
 ---`;
 
-  return chatJson<ParsedResume>(PARSE_SYSTEM, userPrompt);
+  const parsed = await chatJson<Partial<ParsedResume>>(PARSE_SYSTEM, userPrompt);
+  return normalizeParsedResume(parsed);
 }
 
 export async function scoreATSWithAI(rawText: string, parsed: ParsedResume): Promise<ATSScore> {
