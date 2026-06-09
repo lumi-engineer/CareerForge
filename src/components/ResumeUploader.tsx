@@ -14,11 +14,17 @@ export function ResumeUploader({ onAnalyze, isLoading, error }: ResumeUploaderPr
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
+  const isValidFile = (f: File) =>
+    f.type === "application/pdf" ||
+    f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    f.name.toLowerCase().endsWith(".pdf") ||
+    f.name.toLowerCase().endsWith(".docx");
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped?.type === "application/pdf") {
+    if (dropped && isValidFile(dropped)) {
       setFile(dropped);
     }
   }, []);
@@ -44,7 +50,7 @@ export function ResumeUploader({ onAnalyze, isLoading, error }: ResumeUploaderPr
       >
         <input
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={isLoading}
@@ -84,7 +90,7 @@ export function ResumeUploader({ onAnalyze, isLoading, error }: ResumeUploaderPr
                 <Upload className="h-8 w-8 text-accent" />
               </div>
               <p className="font-medium text-lg">Drop your resume here</p>
-              <p className="text-sm text-muted mt-2">or click to browse — PDF only, max 10MB</p>
+              <p className="text-sm text-muted mt-2">or click to browse — PDF or DOCX, max 10MB</p>
             </motion.div>
           )}
         </AnimatePresence>

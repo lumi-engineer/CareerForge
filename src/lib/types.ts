@@ -1,3 +1,54 @@
+export interface ParsedResume {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  linkedin?: string | null;
+  location?: string | null;
+  summary?: string | null;
+  jobTitle: string;
+  jobCategory: string;
+  yearsExperience: number;
+  industry: string;
+  skills: { technical: string[]; soft: string[] };
+  experience: {
+    title: string;
+    company: string;
+    dates: string;
+    location?: string;
+    bullets: string[];
+  }[];
+  education: {
+    degree: string;
+    institution: string;
+    year?: string;
+    details?: string;
+  }[];
+  certifications?: string[];
+  languages?: string[];
+}
+
+export interface ATSScore {
+  overall: number;
+  keywordMatch: number;
+  formatting: number;
+  sections: number;
+  readability: number;
+  suggestions: string[];
+}
+
+export interface TailoredResume {
+  tailoredText: string;
+  structuredResume: ParsedResume;
+  changesSummary: string[];
+  keywordMatches: string[];
+  estimatedAtsScore: number;
+}
+
+export interface CoverLetter {
+  text: string;
+  highlights: string[];
+}
+
 export interface ResumeSection {
   name: string;
   found: boolean;
@@ -71,6 +122,7 @@ export type GeminiInsights = AIInsights;
 
 export interface ImprovedResume {
   improvedText: string;
+  structuredResume?: ParsedResume;
   changesSummary: string[];
   estimatedScore: number;
   engine?: "built-in" | "openrouter" | "gemini";
@@ -105,9 +157,13 @@ export interface AnalysisResult {
   courses: Course[];
   rawTextLength: number;
   originalText: string;
+  parsedResume?: ParsedResume;
+  atsScore?: ATSScore;
   benchmarkComparisons: BenchmarkComparison[];
   bestMatchArchetype: string;
   improvedResume?: ImprovedResume;
+  tailoredResume?: TailoredResume;
+  coverLetter?: CoverLetter;
   aiInsights?: AIInsights;
   /** @deprecated use aiInsights */
   geminiInsights?: AIInsights;
@@ -123,5 +179,17 @@ export interface AnalyzeResponse {
 export interface ImproveResumeResponse {
   success: boolean;
   data?: ImprovedResume;
+  error?: string;
+}
+
+export interface TailorResumeResponse {
+  success: boolean;
+  data?: TailoredResume;
+  error?: string;
+}
+
+export interface CoverLetterResponse {
+  success: boolean;
+  data?: CoverLetter;
   error?: string;
 }

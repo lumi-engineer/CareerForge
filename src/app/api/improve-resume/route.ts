@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeResume } from "@/lib/resume-analyzer";
 import { improveResumeWithOpenRouter, hasOpenRouterKey } from "@/lib/openrouter";
 import { improveResumeLocally } from "@/lib/resume-improver";
+import { analyzeResume } from "@/lib/resume-analyzer";
 import { requireAuth, AuthError } from "@/lib/auth";
 import type { AnalysisResult, ImproveResumeResponse } from "@/lib/types";
 
@@ -10,9 +10,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
     await requireAuth();
 
     const body = await request.json();
-    const { originalText, analysis } = body as {
+    const { originalText, analysis, targetJob } = body as {
       originalText?: string;
       analysis?: AnalysisResult;
+      targetJob?: string;
     };
 
     if (!originalText || !analysis) {
@@ -25,12 +26,32 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImproveRe
     let improved;
     let engine: "openrouter" | "built-in" = "built-in";
 
-    if (hasOpenRouterKey()) {
+    if (hasOpenRouterKey() && analysis.parsedResume) {
       try {
-        improved = await improveResumeWithOpenRouter(originalText, analysis);
+        improved = await improveResumeWithOpenRouter(originalText, analysis.parsedResume, targetJob);
         engine = "openrouter";
       } catch (err) {
         console.warn("OpenRouter improve failed, using built-in:", err);
+        improved = improveResumeLocally(originalText, analysis);
+      }
+    } else if (hasOpenRouterKey()) {
+      try {
+        improved = await improveResumeWithOpenRouter(
+          originalText,
+          {
+            name: analysis.profile.name,
+            jobTitle: analysis.profile.jobTitle,
+            jobCategory: analysis.profile.jobCategory,
+            yearsExperience: analysis.profile.yearsExperience,
+            industry: analysis.profile.industry,
+            skills: { technical: analysis.skills.detected, soft: [] },
+            experience: [],
+            education: [],
+          },
+          targetJob
+        );
+        engine = "openrouter";
+      } catch {
         improved = improveResumeLocally(originalText, analysis);
       }
     } else {

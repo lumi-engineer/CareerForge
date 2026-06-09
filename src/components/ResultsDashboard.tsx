@@ -19,7 +19,10 @@ import {
 import { ScoreRing } from "@/components/ScoreRing";
 import { BenchmarkComparisonSection } from "@/components/BenchmarkComparison";
 import { ImprovedResumeSection } from "@/components/ImprovedResumeSection";
-import type { AnalysisResult, Course, ImprovedResume, ResumeFeedback, SkillGap } from "@/lib/types";
+import { ATSScoreSection } from "@/components/ATSScoreSection";
+import { TailorResumeSection } from "@/components/TailorResumeSection";
+import { CoverLetterSection } from "@/components/CoverLetterSection";
+import type { AnalysisResult, Course, ImprovedResume, ResumeFeedback, SkillGap, TailoredResume, CoverLetter } from "@/lib/types";
 
 function FeedbackCard({ feedback }: { feedback: ResumeFeedback }) {
   const pct = Math.round((feedback.score / feedback.maxScore) * 100);
@@ -132,13 +135,31 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
   const [improvedResume, setImprovedResume] = useState<ImprovedResume | undefined>(
     data.improvedResume
   );
+  const [tailoredResume, setTailoredResume] = useState<TailoredResume | undefined>(
+    data.tailoredResume
+  );
+  const [coverLetter, setCoverLetter] = useState<CoverLetter | undefined>(data.coverLetter);
 
   const aiInsights = data.aiInsights ?? data.geminiInsights;
 
+  const persistUpdate = (updates: Partial<AnalysisResult>) => {
+    const updated = { ...data, ...updates };
+    sessionStorage.setItem("careerforge-analysis", JSON.stringify(updated));
+  };
+
   const handleImproved = (improved: ImprovedResume) => {
     setImprovedResume(improved);
-    const updated = { ...data, improvedResume: improved };
-    sessionStorage.setItem("careerforge-analysis", JSON.stringify(updated));
+    persistUpdate({ improvedResume: improved });
+  };
+
+  const handleTailored = (tailored: TailoredResume | null) => {
+    setTailoredResume(tailored ?? undefined);
+    persistUpdate({ tailoredResume: tailored ?? undefined });
+  };
+
+  const handleCoverLetter = (letter: CoverLetter | null) => {
+    setCoverLetter(letter ?? undefined);
+    persistUpdate({ coverLetter: letter ?? undefined });
   };
 
   return (
@@ -190,6 +211,8 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
           </div>
         </div>
       </motion.section>
+
+      {data.atsScore && <ATSScoreSection atsScore={data.atsScore} />}
 
       {aiInsights && (
         <section className="card-glow rounded-2xl bg-surface-elevated p-8">
@@ -282,6 +305,22 @@ export function ResultsDashboard({ data }: { data: AnalysisResult }) {
           analysis={data}
           improvedResume={improvedResume}
           onImproved={handleImproved}
+        />
+      )}
+
+      {data.parsedResume && (
+        <TailorResumeSection
+          analysis={data}
+          tailoredResume={tailoredResume}
+          onTailored={handleTailored}
+        />
+      )}
+
+      {data.parsedResume && (
+        <CoverLetterSection
+          analysis={data}
+          coverLetter={coverLetter}
+          onGenerated={handleCoverLetter}
         />
       )}
 

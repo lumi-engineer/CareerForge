@@ -4,30 +4,40 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Briefcase, Calendar, ExternalLink, History, Mail, User } from "lucide-react";
+import {
+  getLocalHistory,
+  mergeHistoryEntries,
+  type HistoryEntry,
+} from "@/lib/client-history";
 
-interface HistoryItem {
+interface AuthUser {
   id: string;
-  fileName: string | null;
-  jobTitle: string;
-  jobCategory: string;
-  overallScore: number;
-  userEmail: string;
-  userName: string | null;
-  createdAt: string;
+  email: string;
+  name: string | null;
 }
 
 export default function HistoryPage() {
-  const [items, setItems] = useState<HistoryItem[]>([]);
+  const [items, setItems] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    fetch("/api/history")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setItems(data.data);
+    Promise.all([
+      fetch("/api/auth/me").then((r) => r.json()),
+      fetch("/api/history").then((r) => r.json()),
+    ])
+      .then(([authData, historyData]) => {
+        const currentUser = authData.user as AuthUser | null;
+        setUser(currentUser);
+
+        const serverItems: HistoryEntry[] = historyData.success ? historyData.data : [];
+        const localItems = currentUser ? getLocalHistory(currentUser.id) : [];
+        setItems(mergeHistoryEntries(serverItems, localItems));
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const isLoggedIn = Boolean(user);
 
   return (
     <div className="py-12">
@@ -40,7 +50,9 @@ export default function HistoryPage() {
             </h1>
           </div>
           <p className="text-muted">
-            All resume analyses from every user — job titles, scores, and results.
+            {isLoggedIn
+              ? "Your resume analyses — job titles, scores, and results."
+              : "Sign in to save and view your resume analysis history."}
           </p>
         </motion.div>
 
@@ -49,13 +61,27 @@ export default function HistoryPage() {
         ) : items.length === 0 ? (
           <div className="card-glow rounded-2xl bg-surface-elevated p-12 text-center">
             <History className="h-12 w-12 text-muted mx-auto mb-4" />
-            <p className="text-muted mb-6">No analyses yet. Be the first to upload a resume!</p>
-            <Link
-              href="/login"
-              className="inline-flex rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
-            >
-              Sign In & Analyze
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <p className="text-muted mb-6">No analyses yet. Upload your first resume to get started!</p>
+                <Link
+                  href="/analyze"
+                  className="inline-flex rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
+                >
+                  Analyze Your Resume
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-muted mb-6">Sign in to analyze resumes and track your history.</p>
+                <Link
+                  href="/login?redirect=/history"
+                  className="inline-flex rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-background hover:bg-accent-light transition-colors"
+                >
+                  Sign In & Analyze
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <div className="card-glow rounded-2xl bg-surface-elevated overflow-hidden">

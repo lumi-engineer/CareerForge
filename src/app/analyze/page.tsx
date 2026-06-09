@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FileSearch, Globe, MessageSquare, BookOpen, Sparkles } from "lucide-react";
 import { ResumeUploader } from "@/components/ResumeUploader";
+import { saveAnalysisToLocalHistory } from "@/lib/client-history";
 
 const analysisSteps = [
   { icon: FileSearch, label: "Scanning resume layout & content" },
@@ -21,6 +22,7 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string; name: string | null } | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -29,6 +31,7 @@ export default function AnalyzePage() {
         if (!data.user) {
           router.replace("/login?redirect=/analyze");
         } else {
+          setCurrentUser(data.user);
           setAuthChecked(true);
         }
       });
@@ -65,6 +68,9 @@ export default function AnalyzePage() {
       }
 
       sessionStorage.setItem("careerforge-analysis", JSON.stringify(result.data));
+      if (currentUser) {
+        saveAnalysisToLocalHistory(currentUser.id, currentUser.email, currentUser.name, result.data, file.name);
+      }
       router.push("/results");
     } catch {
       setError("Network error. Please check your connection and try again.");
@@ -94,7 +100,7 @@ export default function AnalyzePage() {
             Upload Your <span className="gradient-text">Resume</span>
           </h1>
           <p className="text-muted text-lg max-w-xl mx-auto">
-            OpenRouter AI scans your resume, detects your job, and finds courses to close skill gaps.
+            Upload PDF or DOCX — OpenRouter AI parses, scores ATS compatibility, and finds courses to close skill gaps.
           </p>
         </motion.div>
 

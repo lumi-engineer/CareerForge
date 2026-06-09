@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { ScoreRing } from "@/components/ScoreRing";
+import { downloadDocx } from "@/lib/docx-download";
 import type { AnalysisResult, ImprovedResume } from "@/lib/types";
 
 interface ImprovedResumeSectionProps {
@@ -29,6 +30,7 @@ export function ImprovedResumeSection({
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"original" | "improved" | "split">("split");
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const handleImprove = async () => {
     setLoading(true);
@@ -65,6 +67,22 @@ export function ImprovedResumeSection({
     await navigator.clipboard.writeText(improvedResume.improvedText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!improvedResume?.improvedText) return;
+    setExporting(true);
+    try {
+      await downloadDocx({
+        structuredResume: improvedResume.structuredResume,
+        text: improvedResume.improvedText,
+        fileName: `${analysis.profile.name.replace(/\s+/g, "_")}_Improved_Resume`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "DOCX export failed.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDownload = () => {
@@ -179,11 +197,19 @@ export function ImprovedResumeSection({
                 {copied ? "Copied!" : "Copy"}
               </button>
               <button
+                onClick={handleDownloadDocx}
+                disabled={exporting}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-background hover:bg-accent-light transition-colors disabled:opacity-50"
+              >
+                {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Download DOCX
+              </button>
+              <button
                 onClick={handleDownload}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted hover:text-foreground transition-colors"
               >
                 <Download className="h-4 w-4" />
-                Download
+                Download TXT
               </button>
             </div>
 

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { ResultsDashboard } from "@/components/ResultsDashboard";
+import { getLocalAnalysis } from "@/lib/client-history";
 import type { AnalysisResult } from "@/lib/types";
 
 export default function HistoryDetailPage() {
@@ -22,6 +23,17 @@ export default function HistoryDetailPage() {
         if (result.success) {
           setData(result.data);
           setMeta(result.meta);
+          return;
+        }
+
+        const local = getLocalAnalysis(id);
+        if (local) {
+          setData(local);
+          setMeta({
+            userEmail: "",
+            userName: local.profile.name,
+            createdAt: local.timestamp,
+          });
         }
       })
       .finally(() => setLoading(false));
