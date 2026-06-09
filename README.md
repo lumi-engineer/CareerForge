@@ -61,7 +61,7 @@ Add these **Environment Variables** in Vercel → Project → Settings → Envir
 
 | Variable | Value |
 |----------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://jwtthwnknpwljmhjohmf.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://Your Supabase URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase **anon public** key (Settings → API) |
 | `OPENROUTER_API_KEY` | Your OpenRouter API key |
 | `DATABASE_URL` | `file:./dev.db` (local only — use Vercel Postgres or Turso for production) |
